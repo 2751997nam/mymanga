@@ -15,6 +15,7 @@ class ChapterListener {
         });
         let parser = new ChapterParser();
         await parser.init(result, chapter);
+        global.consumeCount--;
     }
 }
 

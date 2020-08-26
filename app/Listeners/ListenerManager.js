@@ -32,11 +32,11 @@ class ListenerManager {
         });
         this.channel.prefetch(1);
 
-        this.channel.consume(this.exchange, (msg) => {
-            subLimiter.removeTokens(1, async (err, remainingRequests) => {
+        this.channel.consume(this.exchange, async (msg) => {
+            global.consumeCount++;
+            await this.rateLimter(async () => {
                 if (msg.content) {
-                    global.COUNT++;
-                    console.log('COUNT: ', global.COUNT);
+                    console.log('COUNT: ', global.consumeCount);
                     let data = JSON.parse(msg.content.toString());
                     console.log("reveived", data);
                     if (data.listener) {
@@ -49,6 +49,33 @@ class ListenerManager {
                 this.channel.ack(msg);
             });
         });
+    }
+
+    async rateLimter(callback) {
+        if (global.consumeCount > 90) {
+            global.consumeRate = 20000;
+        }
+        else if (global.consumeCount > 80) {
+            global.consumeRate = 8000;
+        }
+        else if (global.consumeCount > 70) {
+            global.consumeRate = 7000;
+        } else if (global.consumeCount > 60) {
+            global.consumeRate = 6000;
+        } else if (global.consumeCount > 60) {
+            global.consumeRate = 6000;
+        } else if (global.consumeCount > 50) {
+            global.consumeRate = 4000;
+        } else {
+            global.consumeRate = 1000;
+        }
+
+        await new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve(1);
+            }, global.consumeRate);
+        })
+        callback();
     }
 
     createConnection() {

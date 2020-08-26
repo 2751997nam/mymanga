@@ -20,7 +20,7 @@ class ChapterParser {
             dataManga = $(readSection).attr('data-manga');
             dataChapter = $(readSection).attr('data-chapter');
         }
-        var myRegexp = /(content=)(\[(.?)+\])/gm;
+        var myRegexp = /(var content=)(\[(.?)+\])/gm;
         let content = myRegexp.exec(data);
         if (content && content.length > 2) {
             content = content[2];
