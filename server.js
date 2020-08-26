@@ -28,3 +28,4 @@ const CrawlerManager = require(__dirname + "/app/Crawlers/CrawlerManager");
 const ListenerManager = require(__dirname + "/app/Listeners/ListenerManager");
 CrawlerManager.init();
 ListenerManager.init();
+global.COUNT = 0;

@@ -8,18 +8,18 @@ var pubLimiter = new RateLimiter(1, 10);
 
 class MangaCrawler extends BaseCrawler {
     getListener () {
-        return "MangaListener";
+        return "ChapterListener";
     }
 
     async init() {
-        let mangas = await Database.table("manga").where({status: 'ACTIVE'});
+        let chapters = await Database.table("chapter").where({status: 'PENDING'});
         var exchange = Config.get('crawl.queueName');
         this.channel.assertExchange(exchange, "fanout", {
-            durable: false,
+            durable: false
         });
-        for (let item of mangas) {
+        for (let item of chapters) {
             pubLimiter.removeTokens(1, (error, remainingRequests)  => {
-                // this.sentToQueue(exchange, item.crawl_url);
+                this.sentToQueue(exchange, item);
             })
         }
     }

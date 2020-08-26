@@ -15,9 +15,10 @@ class MangaParser {
         let image = $(header).find("img");
         let data = {};
         if (image) {
-            data.image = $(image)
-                .attr("src")
-                .replace(/-[0-9]+x[0-9]+/gm, "");
+            image = $(image).attr("src");
+            if (image) {
+                data.image = image.replace(/-[0-9]+x[0-9]+/gm, "");
+            }
         }
         let info = $(header).find("ul.truyen_info_right");
         data.name = this.parseInfo($, info, "h1.entry-title");
@@ -33,7 +34,14 @@ class MangaParser {
             "li:nth-child(3) a",
             "multiple"
         );
-        data.status = this.parseInfo($, info, "li:nth-child(4) a");
+        let status = this.parseInfo($, info, "li:nth-child(4) a");
+        if (status == 'Đang tiến hành') {
+            data.status = 'ACTIVE';
+        } else if (status == 'Hoàn thành') {
+            data.status = 'FINISHED';
+        } else {
+            data.status = 'ACTIVE';
+        }
         data.translators = this.parseInfo($, info, "li:nth-child(5) a", 'multiple');
         let description = $('div.entry-content');
         if (description) {
@@ -60,14 +68,14 @@ class MangaParser {
         }
     }
 
-    saveManga(manga, data) {
+    async saveManga(manga, data) {
         let keys = ['status', 'image', 'description'];
         for (let key of keys) {
             if (manga[key] != data[key]) {
                 manga[key] = data[key];
             }
         }
-        manga.save();
+        await manga.save();
     }
 
     async saveData(data) {
@@ -81,7 +89,7 @@ class MangaParser {
             manga.image = data.image;
             manga.status = data.status;
             manga.description = data.description;
-            manga.save();
+            await manga.save();
         }
         for (let item of data.categories) {
             this.saveRelation(manga.id, item, 'category', 'category_n_manga', 'category_id');

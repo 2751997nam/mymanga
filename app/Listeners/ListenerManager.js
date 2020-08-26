@@ -4,33 +4,50 @@ const dir = Helpers.appRoot() + "/app";
 const Util = use("App/Utils/util");
 var amqp = require("amqplib/callback_api");
 const Config = use("Config");
+var RateLimiter = require('limiter').RateLimiter;
+var subLimiter = new RateLimiter(1, 2000);
 
 class ListenerManager {
     async init() {
         this.implDir = dir + "/Listeners/impl";
         const connection = await this.createConnection();
+        console.log('created connection');
         const channel = await this.createChannel(connection);
         var exchange = Config.get("crawl.queueName");
         channel.assertExchange(exchange, "fanout", {
-            durable: true,
+            durable: false
         });
-        channel.assertQueue(exchange, {
-            durable: true,
-        });
-        channel.prefetch(1);
+        this.channel = channel;
+        this.connection = connection;
+        this.exchange = exchange;
 
-        channel.consume(exchange, (msg) => {
-            if (msg.content) {
-                let data = JSON.parse(msg.content.toString());
-                console.log("reviced", data);
-                if (data.listener) {
-                    const crawler = this.loadCrawlers(
-                        this.implDir + "/" + data.listener
-                    );
-                    crawler.init(data.data);
+        for (let i = 0; i < Config.get('crawl.consumers'); i++) {
+            this.consume();
+        }
+    }
+
+    async consume() {
+        this.channel.assertQueue(this.exchange, {
+            exclusive: true
+        });
+        this.channel.prefetch(1);
+
+        this.channel.consume(this.exchange, (msg) => {
+            subLimiter.removeTokens(1, async (err, remainingRequests) => {
+                if (msg.content) {
+                    global.COUNT++;
+                    console.log('COUNT: ', global.COUNT);
+                    let data = JSON.parse(msg.content.toString());
+                    console.log("reveived", data);
+                    if (data.listener) {
+                        const listener = this.loadListeners(
+                            this.implDir + "/" + data.listener
+                        );
+                        listener.init(data.data);
+                    }
                 }
-            }
-            channel.ack(msg);
+                this.channel.ack(msg);
+            });
         });
     }
 
@@ -63,7 +80,7 @@ class ListenerManager {
             channel.assertQueue(
                 queue,
                 {
-                    durable: true,
+                    exclusive: true
                 },
                 function (error, q) {
                     if (error) {
@@ -76,9 +93,8 @@ class ListenerManager {
         });
     }
 
-    loadCrawlers(dir) {
-        var crawler = new (require(dir))();
-        return crawler;
+    loadListeners(dir) {
+        return new (require(dir))();
     }
 }
 
