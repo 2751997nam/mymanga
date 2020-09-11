@@ -19,7 +19,7 @@ class MangaCrawler extends BaseCrawler {
         });
         for (let item of mangas) {
             pubLimiter.removeTokens(1, (error, remainingRequests)  => {
-                // this.sentToQueue(exchange, item.crawl_url);
+                this.sentToQueue(exchange, item.crawl_url);
             })
         }
     }

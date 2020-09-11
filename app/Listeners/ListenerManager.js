@@ -30,7 +30,7 @@ class ListenerManager {
         this.channel.assertQueue(this.exchange, {
             exclusive: true
         });
-        this.channel.prefetch(10);
+        this.channel.prefetch(2);
 
         this.channel.consume(this.exchange, async (msg) => {
             // await this.rateLimter(async () => {
