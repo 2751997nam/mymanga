@@ -30,11 +30,10 @@ class ListenerManager {
         this.channel.assertQueue(this.exchange, {
             exclusive: true
         });
-        this.channel.prefetch(1);
+        this.channel.prefetch(10);
 
         this.channel.consume(this.exchange, async (msg) => {
-            global.consumeCount++;
-            await this.rateLimter(async () => {
+            // await this.rateLimter(async () => {
                 if (msg.content) {
                     console.log('COUNT: ', global.consumeCount);
                     let data = JSON.parse(msg.content.toString());
@@ -43,38 +42,36 @@ class ListenerManager {
                         const listener = this.loadListeners(
                             this.implDir + "/" + data.listener
                         );
-                        listener.init(data.data);
+                        await listener.init(data.data);
                     }
                 }
                 this.channel.ack(msg);
-            });
+            // });
         });
     }
 
     async rateLimter(callback) {
         if (global.consumeCount > 90) {
-            global.consumeRate = 20000;
+            global.consumeRate = 60000;
         }
         else if (global.consumeCount > 80) {
-            global.consumeRate = 8000;
+            global.consumeRate = 40000;
         }
         else if (global.consumeCount > 70) {
-            global.consumeRate = 7000;
+            global.consumeRate = 30000;
         } else if (global.consumeCount > 60) {
-            global.consumeRate = 6000;
-        } else if (global.consumeCount > 60) {
-            global.consumeRate = 6000;
+            global.consumeRate = 20000;
         } else if (global.consumeCount > 50) {
-            global.consumeRate = 4000;
+            global.consumeRate = 10000;
         } else {
             global.consumeRate = 1000;
         }
 
-        await new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve(1);
-            }, global.consumeRate);
-        })
+        // await new Promise((resolve, reject) => {
+        //     setTimeout(() => {
+        //         resolve(1);
+        //     }, global.consumeRate);
+        // })
         callback();
     }
 

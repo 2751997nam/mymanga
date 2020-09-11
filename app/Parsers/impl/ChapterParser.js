@@ -46,20 +46,24 @@ class ChapterParser {
                 saveData.push(image);
             }
         }
-
         for (let item of saveData) {
+            global.consumeCount++;
             let img = await Database.table('image')
                 .where('chapter_id', item.chapter_id)
                 .where('sorder', item.sorder)
                 .first();
+            global.consumeCount--;
             if (!img) {
+                global.consumeCount++;
                 await Image.create(item);
+                global.consumeCount--;
             }
         }
-
+        global.consumeCount++;
         chapter = await Chapter.find(chapter.id);
         chapter.status = 'FINISHED';
         await chapter.save();
+        global.consumeCount--;
     }
 
     atob(str) {
