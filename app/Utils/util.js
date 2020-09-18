@@ -33,8 +33,8 @@ function Util() {
             str = str.toLowerCase();
 
             // remove accents, swap ñ for n, etc
-            var from = "åàáãäâèéëêìíïîòóöôùúüûñç·/_,:;";
-            var to = "aaaaaaeeeeiiiioooouuuunc------";
+            var from = "àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ·/_,:;";
+            var to = "aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyd------";
 
             for (var i = 0, l = from.length; i < l; i++) {
                 str = str.replace(

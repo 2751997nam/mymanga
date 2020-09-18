@@ -30,24 +30,41 @@ class ListenerManager {
         this.channel.assertQueue(this.exchange, {
             exclusive: true
         });
-        this.channel.prefetch(2);
+        this.channel.prefetch(1);
 
         this.channel.consume(this.exchange, async (msg) => {
             // await this.rateLimter(async () => {
+            subLimiter.removeTokens(1, async (error, remainingRequests)  => {
                 if (msg.content) {
-                    console.log('COUNT: ', global.consumeCount);
                     let data = JSON.parse(msg.content.toString());
                     console.log("reveived", data);
                     if (data.listener) {
                         const listener = this.loadListeners(
                             this.implDir + "/" + data.listener
                         );
-                        await listener.init(data.data);
+                        let result = await listener.init(data.data);
+ 
+                        if (result.next) {
+                            this.callCrawler(listener.getNextCrawler(), result.next);
+                        }
+                        if (result.continue.length > 0) {
+                            this.callCrawler(listener.getContinueCrawler(), result.continue);
+                        }
                     }
                 }
                 this.channel.ack(msg);
-            // });
+            });
         });
+    }
+
+    async callCrawler(crawlerName, param) {
+        let cralwer = null;
+        if (crawlerName) {
+            let classPath = dir + '/Crawlers/impl/' + crawlerName + '.js';
+            cralwer = new (require(classPath))(this.channel);
+            await cralwer.init(param);
+        }
+        return cralwer;
     }
 
     async rateLimter(callback) {

@@ -3,6 +3,7 @@ const Helpers = use('Helpers');
 const dir = Helpers.appRoot() + '/app';
 const Util = use('App/Utils/util');
 var amqp = require("amqplib/callback_api");
+const Config = use('Config');
 
 class CrawlerManager
 {
@@ -11,7 +12,8 @@ class CrawlerManager
         const channel = await this.createChannel(connection);
         this.channel = channel;
         this.connection = connection;
-        this.loadCrawlers(dir + '/Crawlers/impl');
+        // this.loadCrawlers(dir + '/Crawlers/impl');
+        this.loadStartCrawler();
     }
 
     createConnection() {
@@ -47,6 +49,12 @@ class CrawlerManager
             }
         });
     };
+
+    loadStartCrawler() {
+        let classPath = dir + '/Crawlers/impl/' + Config.get('crawl.start-crawler');
+        var crawler = new (require(classPath))(this.channel);
+        crawler.init();
+    }
 }
 
 module.exports = new CrawlerManager();

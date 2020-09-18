@@ -8,89 +8,58 @@ const Database = use("Database");
 class ChapterParser {
     async init(data, chapter) {
         const $ = cheerio.load(data);
-        await this.parse($, data, chapter)
+        return await this.parse($, chapter)
     }
 
-    async parse($, data, chapter) {
-        let readSection = $('div.vung_doc');
-        let dataManga = null;
-        let dataChapter = null;
-        let saveData = [];
-        if (readSection) {
-            dataManga = $(readSection).attr('data-manga');
-            dataChapter = $(readSection).attr('data-chapter');
-        }
-        var myRegexp = /(var content=)(\[(.?)+\])/gm;
-        let content = myRegexp.exec(data);
-        if (content && content.length > 2) {
-            content = content[2];
-            content = content.replace(',]', ']');
-            content = JSON.parse(content);
-        }
-        if (content && content.length > 0) {
-            for (let i = 0; i < content.length; i++) {
+    async parse($, chapter) {
+        let readSection = $('.reading-detail.box_doc');
+        let data = [];
+        let images = $(readSection).find('.page-chapter img');
+        let imageUrls = [];
+        if (images && images.length > 0) {
+            for (let i = 0; i < images.length; i++) {
+                let url = this.parseUrl($(images[i]).attr('src'));
+                imageUrls.push(url);
                 let image = {
                     chapter_id: chapter.id,
                     sorder: i,
-                    url: content[i],
+                    url: url,
                     parse_url:  '',
                     error_url: ''
                 };
-                if (dataChapter && dataManga) {
-                    var link = 'http://1.truyentranhmanga.com/images/' + dataManga + '/' + dataChapter + '/';
-
-                    image.parse_url = link + i + '.' + this.getExtension(content[i]);
+                image.error_url = this.parseUrl($(image[i]).attr('data-original'));
+                image.parse_url = this.parseUrl($(images[i]).attr('data-cdn'));
+                if (url) {
+                    data.push(image);
                 }
-                image.error_url = 'http://truyentranhmanga.com/images/' + this.btoa(content[i]) + '.jpg';
-
-                saveData.push(image);
             }
         }
-        for (let item of saveData) {
-            global.consumeCount++;
-            let img = await Database.table('image')
-                .where('chapter_id', item.chapter_id)
-                .where('sorder', item.sorder)
-                .first();
-            global.consumeCount--;
-            if (!img) {
-                global.consumeCount++;
-                await Image.create(item);
-                global.consumeCount--;
+        let existedImages = await Database.select('url').from('image').where('chapter_id', chapter.id).whereIn('url', imageUrls);
+        let saveData = [];
+        for (let i = 0; i < data.length; i++) {
+            if (!existedImages.includes(data[i].url)) {
+                saveData.push(data[i]);
             }
         }
-        global.consumeCount++;
+        if (saveData.length) {
+            await Database.from('image').insert(saveData);
+        }
         chapter = await Chapter.find(chapter.id);
         chapter.status = 'FINISHED';
         await chapter.save();
-        global.consumeCount--;
+
+        return {
+            next: [],
+            continue: []
+        };
     }
 
-    atob(str) {
-        return Buffer.from(str, 'base64').toString('binary');
-    }
-
-    btoa(str) {
-        return Buffer.from(str, 'binary').toString('base64');
-    }
-
-    getExtension(url) {
-        let extension = url.split('.').pop().split(/\#|\?/)[0];
-        extension = extension.toLowerCase();
-        switch (extension) {
-        case 'jpg':
-            break;
-        case 'jpeg':
-            break;
-        case 'png':
-            break;
-        case 'gif':
-            break;
-        default:
-            extension = 'jpg';
-            break;
+    parseUrl(url) {
+        if (url && !url.includes('http')) {
+            url = 'https:' + url;
         }
-        return extension;
+
+        return url;
     }
 }
 

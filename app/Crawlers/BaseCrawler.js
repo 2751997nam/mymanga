@@ -24,6 +24,7 @@ class BaseCrawler {
             listener: this.getListener(),
             data: data,
         };
+
         this.channel.sendToQueue(exchange, Buffer.from(JSON.stringify(sendData)), {
             persistent: true
         });

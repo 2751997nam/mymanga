@@ -14,7 +14,15 @@ class ChapterListener {
             })
         });
         let parser = new ChapterParser();
-        await parser.init(result, chapter);
+        return await parser.init(result, chapter);
+    }
+
+    getContinueCrawler() {
+        return "";
+    }
+
+    getNextCrawler() {
+        return "";
     }
 }
 
