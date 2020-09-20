@@ -37,18 +37,18 @@ class ListenerManager {
             subLimiter.removeTokens(1, async (error, remainingRequests)  => {
                 if (msg.content) {
                     let data = JSON.parse(msg.content.toString());
-                    console.log("reveived", data);
+                    console.log("received", data);
                     if (data.listener) {
                         const listener = this.loadListeners(
                             this.implDir + "/" + data.listener
                         );
                         let result = await listener.init(data.data);
  
-                        if (result.next) {
-                            this.callCrawler(listener.getNextCrawler(), result.next);
+                        if (result.next && data.allowNext) {
+                            this.callCrawler(listener.getNextCrawler(), {urls: result.next, allowNext: data.allowNext});
                         }
                         if (result.continue.length > 0) {
-                            this.callCrawler(listener.getContinueCrawler(), result.continue);
+                            this.callCrawler(listener.getContinueCrawler(), {urls: result.continue, allowNext: data.allowNext});
                         }
                     }
                 }

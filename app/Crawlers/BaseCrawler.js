@@ -19,10 +19,11 @@ class BaseCrawler {
     }
 
 
-    sentToQueue(exchange, data) {
+    sentToQueue(exchange, data, allowNext = true) {
         let sendData = {
             listener: this.getListener(),
             data: data,
+            allowNext: allowNext === false ? false : true,
         };
 
         this.channel.sendToQueue(exchange, Buffer.from(JSON.stringify(sendData)), {

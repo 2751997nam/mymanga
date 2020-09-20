@@ -10,14 +10,14 @@ class MangaCrawler extends BaseCrawler {
         return "MangaListener";
     }
 
-    async init(links = []) {
+    async init(params) {
         var exchange = Config.get('crawl.queueName');
         this.channel.assertExchange(exchange, "fanout", {
             durable: false,
         });
-        for (let link of links) {
+        for (let url of params.urls) {
             pubLimiter.removeTokens(1, (error, remainingRequests)  => {
-                this.sentToQueue(exchange, link);
+                this.sentToQueue(exchange, url, params.allowNext);
             })
         }
     }

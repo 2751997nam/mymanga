@@ -11,15 +11,19 @@ class MangaCrawler extends BaseCrawler {
         return "ChapterListener";
     }
 
-    async init(links = []) {
-        let chapters = await Database.table("chapter").where({status: 'PENDING'}).whereIn('crawl_url', links);
+    async init(params) {
+        let chapters = await Database.table("chapter").where({status: 'PENDING'}).whereIn('crawl_url', params.urls);
         var exchange = Config.get('crawl.queueName');
         this.channel.assertExchange(exchange, "fanout", {
             durable: false
         });
         for (let item of chapters) {
             pubLimiter.removeTokens(1, (error, remainingRequests)  => {
-                this.sentToQueue(exchange, {id: item.id, name: item.name, crawl_url: item.crawl_url, manga_id: item.manga_id});
+                this.sentToQueue(
+                    exchange, 
+                    {id: item.id, name: item.name, crawl_url: item.crawl_url, manga_id: item.manga_id},
+                    params.allowNext
+                );
             })
         }
     }

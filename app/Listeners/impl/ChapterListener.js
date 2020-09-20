@@ -7,11 +7,14 @@ class ChapterListener {
         let result = await new Promise((resolve, reject) => {
             exec("curl --location --request GET '" + chapter.crawl_url + "'", {timeout: 5000}, function (error, stdout, stderr) {
                 if (error) {
-                    reject(stderr);
+                    reject('');
                 } else {
                     resolve(stdout);
                 }
             })
+        }).catch((error) => {
+            console.log(error);
+            return '';
         });
         let parser = new ChapterParser();
         return await parser.init(result, chapter);

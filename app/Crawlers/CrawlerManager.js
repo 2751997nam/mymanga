@@ -4,16 +4,22 @@ const dir = Helpers.appRoot() + '/app';
 const Util = use('App/Utils/util');
 var amqp = require("amqplib/callback_api");
 const Config = use('Config');
-
-class CrawlerManager
+const Database = use('Database');
+class Crawler
 {
     async init () {
         const connection = await this.createConnection();
         const channel = await this.createChannel(connection);
         this.channel = channel;
         this.connection = connection;
-        // this.loadCrawlers(dir + '/Crawlers/impl');
-        this.loadStartCrawler();
+    }
+
+    getConnection() {
+        return this.connection;
+    }
+
+    getChannel () {
+        return this.channel;
     }
 
     createConnection() {
@@ -50,11 +56,61 @@ class CrawlerManager
         });
     };
 
-    loadStartCrawler() {
-        let classPath = dir + '/Crawlers/impl/' + Config.get('crawl.start-crawler');
+    crawlAll(params = {}) {
+        let classPath = dir + '/Crawlers/impl/MangaLinkCrawler';
         var crawler = new (require(classPath))(this.channel);
-        crawler.init();
+        crawler.init(params);
+    }
+
+    crawlLink() {
+        this.crawlAll({
+            urls: [Config.get('crawl.all-manga')],
+            allowNext: false
+        });
+    }
+
+    async crawlManga() {
+        let classPath = dir + '/Crawlers/impl/MangaCrawler';
+        var crawler = new (require(classPath))(this.channel);
+        let mangas = await Database.select('crawl_url').from('manga').where('status', 'ACTIVE');
+        let urls = [];
+        for (let item of mangas) {
+            urls.push(item.crawl_url);
+        }
+        crawler.init({
+            urls: urls,
+            allowNext: false
+        });
+    }
+
+    async crawlChapter() {
+        let classPath = dir + '/Crawlers/impl/ChapterCrawler';
+        var crawler = new (require(classPath))(this.channel);
+        let chapters = await Database.select('crawl_url').from('chapter').where({status: 'PENDING'});
+        let urls = [];
+        for (let item of chapters) {
+            urls.push(item.crawl_url);
+        }
+        crawler.init({
+            urls: urls,
+            allowNext: false
+        });
     }
 }
 
-module.exports = new CrawlerManager();
+var CrawlerManager = (function () {
+    var instance = null;
+
+    return {
+        getInstance: function () {
+            if (instance == null) {
+                instance = new Crawler();
+                instance.constructor = null;
+            }
+
+            return instance;
+        }
+    }
+})();
+
+module.exports = CrawlerManager;

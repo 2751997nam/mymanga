@@ -5,5 +5,5 @@ module.exports = {
     "all-manga": "https://www.nettruyen.com/tim-truyen",
     "start-crawler": "MangaLinkCrawler",
     queueName: "manga-crawler1",
-    consumers: 50,
+    consumers: 10,
 };

@@ -18,5 +18,9 @@ const Route = use('Route')
 
 Route.on('/').render('welcome');
 Route.group(() => {
-    Route.get('/manga', 'MangaController.crawl');
-}).prefix('crawl');
+    Route.get('/crawl', 'MangaController.crawl');
+    Route.get('/crawl-all', 'MangaController.crawlAll');
+    Route.get('/crawl-link', 'MangaController.crawlLink');
+    Route.get('/crawl-manga', 'MangaController.crawlManga');
+    Route.get('/crawl-chapter', 'MangaController.crawlChapter');
+});

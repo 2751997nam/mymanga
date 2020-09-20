@@ -7,11 +7,14 @@ class MangaListener {
         let result = await new Promise((resolve, reject) => {
             exec("curl --location --request GET '" + crawlUrl + "'", function (error, stdout, stderr) {
                 if (error) {
-                    reject(stderr);
+                    reject('');
                 } else {
                     resolve(stdout);
                 }
             })
+        }).catch((error) => {
+            console.log(error);
+            return '';
         });
         let parser = new MangaParser();
         return parser.init(result, crawlUrl);

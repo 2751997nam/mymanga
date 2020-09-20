@@ -69,8 +69,7 @@ class MangaParser {
         if (data.chapters) {
             retval.next = await this.saveChapters(manga.id, data.chapters);
         }
-
-        console.log('parsed: ', manga.name);
+        console.log('manga: ', manga.name);
 
         return retval;
     }

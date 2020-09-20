@@ -3,15 +3,18 @@ const { exec } = require('child_process');
 const MangaLinkParser = require('../../Parsers/impl/MangaLinkParser');
 
 class MangaLinkListener {
-    async init (crawl_url) {
+    async init (crawlUrl) {
         let result = await new Promise((resolve, reject) => {
-            exec("curl --location --request GET '" + crawl_url + "'", {timeout: 5000}, function (error, stdout, stderr) {
+            exec("curl --location --request GET '" + crawlUrl + "'", {timeout: 5000}, function (error, stdout, stderr) {
                 if (error) {
-                    reject(stderr);
+                    reject('');
                 } else {
                     resolve(stdout);
                 }
             })
+        }).catch((error) => {
+            console.log(error);
+            return '';
         });
         let parser = new MangaLinkParser();
         let nextUrl = await parser.init(result);

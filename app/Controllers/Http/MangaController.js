@@ -1,35 +1,54 @@
 'use strict'
 
-const Config = use('Config');
-const got = require('got');
-const util = require('../../Utils/util');
-const Manga = use('App/Models/Manga');
+const CrawlerManager = use("App/Crawlers/CrawlerManager");
+const MangaCrawler = use("App/Crawlers/impl/MangaCrawler");
+const Database = use("Database");
 
 class MangaController {
     async crawl({request, response}) {
-        try {
-            let result = await got(Config.get('crawl.list-manga'));
-            result = JSON.parse(result.body);
-            for (let item of result) {
-                let manga = await Manga.findBy('name', item.label);
-                if (!manga) {
-                    Manga.create({
-                        name: item.label,
-                        slug: util.slug(item.label),
-                        image: item.img,
-                        crawl_url: item.link
-                    })
-                } else {
-                    manga.slug = util.slug(item.label);
-                    manga.image = item.img;
-                    manga.crawl_url = item.link;
-                    manga.save();
-                }
-            }
-            response.json(result.length);
-        } catch (error) {
-            response.json(error);
+        let mangaCrawler = new MangaCrawler(CrawlerManager.getInstance().getChannel());
+        let mangas = await Database.from('manga').select('crawl_url').where('status', 'ACTIVE');
+        let links = [];
+        for (let i = 0; i < mangas.length; i++) {
+            links.push(mangas[i].crawl_url);
         }
+        mangaCrawler.init(links);
+
+        return response.json({
+            'status': 'crawling'
+        });
+    }
+
+    async crawlAll({request, response}) {
+        CrawlerManager.getInstance().crawlAll();
+
+        return response.json({
+            'status': 'crawling'
+        });
+    }
+
+    async crawlLink({request, response}) {
+        CrawlerManager.getInstance().crawlLink();
+
+        return response.json({
+            'status': 'crawling'
+        });
+    }
+
+    async crawlManga({request, response}) {
+        CrawlerManager.getInstance().crawlManga();
+
+        return response.json({
+            'status': 'crawling'
+        });
+    }
+
+    async crawlChapter({request, response}) {
+        CrawlerManager.getInstance().crawlChapter();
+
+        return response.json({
+            'status': 'crawling'
+        });
     }
 }
 

@@ -27,6 +27,6 @@ new Ignitor(require("@adonisjs/fold"))
 const CrawlerManager = require(__dirname + "/app/Crawlers/CrawlerManager");
 const ListenerManager = require(__dirname + "/app/Listeners/ListenerManager");
 ListenerManager.init();
-CrawlerManager.init();
+CrawlerManager.getInstance().init();
 global.consumeCount = 0;
 global.consumeRate = 1000;

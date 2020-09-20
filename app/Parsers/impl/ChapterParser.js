@@ -48,6 +48,8 @@ class ChapterParser {
         chapter.status = 'FINISHED';
         await chapter.save();
 
+        console.log('chapter: ' + chapter.crawl_url);
+
         return {
             next: [],
             continue: []
