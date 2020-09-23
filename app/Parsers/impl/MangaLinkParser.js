@@ -42,7 +42,7 @@ class MangaLinkParser {
         }
 
         let ele = $('ul.pagination > li a.next-page');
-        if (ele) {
+        if (ele && $(ele).attr('href')) {
             retval.continue = [$(ele).attr('href')];
         }
 
