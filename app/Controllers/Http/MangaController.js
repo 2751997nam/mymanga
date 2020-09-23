@@ -7,7 +7,7 @@ const Database = use("Database");
 class MangaController {
     async crawl({request, response}) {
         let mangaCrawler = new MangaCrawler(CrawlerManager.getInstance().getChannel());
-        let mangas = await Database.from('manga').select('crawl_url').where('status', 'ACTIVE');
+        let mangas = await Database.from('manga').select('crawl_url');
         let links = [];
         for (let i = 0; i < mangas.length; i++) {
             links.push(mangas[i].crawl_url);

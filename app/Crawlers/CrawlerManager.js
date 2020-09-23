@@ -72,7 +72,7 @@ class Crawler
     async crawlManga() {
         let classPath = dir + '/Crawlers/impl/MangaCrawler';
         var crawler = new (require(classPath))(this.channel);
-        let mangas = await Database.select('crawl_url').from('manga').where('status', 'ACTIVE');
+        let mangas = await Database.select('crawl_url').from('manga');
         let urls = [];
         for (let item of mangas) {
             urls.push(item.crawl_url);
