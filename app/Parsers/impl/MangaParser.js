@@ -48,7 +48,7 @@ class MangaParser {
             let chapter = {};
             let name = $(listChapter[i]).text();
             if (name) {
-                chapter.name = name;
+                chapter.name = this.removeEmoji(name);
                 chapter.slug = util.slug(name);
             }
             let crawlUrl = $(listChapter[i]).attr('href');
